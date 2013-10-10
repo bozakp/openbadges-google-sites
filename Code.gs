@@ -1,3 +1,7 @@
+var FORM_ID = "15O4ts5nBVUtfluPeSK1JgbjvauAiWmETrBbLreiIEhI";
+var SPREADSHEET_ID = "0AirK-4dEIsvKdDNjR3dtSm5BR0ZSel9XTWRQVXZmZ2c";
+var CLAIM_URL_BASE = "https://sites.google.com/site/philbadgetest/";
+
 var FormCols = {}
 FormCols.TIMESTAMP = 1;
 FormCols.EMAIL = 3;
@@ -42,7 +46,7 @@ var ISSUER_TEMPLATE = {
 };
 
 function onFormSumbit(e) {
-  var doc = SpreadsheetApp.openById('0AirK-4dEIsvKdDNjR3dtSm5BR0ZSel9XTWRQVXZmZ2c');
+  var doc = SpreadsheetApp.openById(SPREADSHEET_ID);
   var formSheet = doc.getSheetByName("Form Responses");
   var lastRow = formSheet.getLastRow()+1;  // RACE! Seek ways to fix this
    
@@ -52,17 +56,15 @@ function onFormSumbit(e) {
   var email = formResponse.getItemResponses()[1].getResponse();
  
   var claim_code = "row=" + lastRow;
-  var baseUrl = "https://sites.google.com/site/philbadgetest/";
-  var claim_code_base = "row=" + lastRow;
   var encoded_claim_code = Utilities.base64Encode(claim_code);
-  var url = baseUrl+"?claim_code=" + encoded_claim_code; // build the url to be emailed to person. for now, one claim code at a time. future: multiple (?)
+  var url = CLAIM_URL_BASE+"?claim_code=" + encoded_claim_code; // build the url to be emailed to person. for now, one claim code at a time. future: multiple (?)
 
   var emailText = "Hi "+name+",\nThanks for trying the Open Badges Issuer Gadget. To claim you badges visit \n\n" + url;
   MailApp.sendEmail(email, "Claim your Open Badges Issuer Gadget Badges", emailText);
 }
 
 function doGet(e){ 
-  var doc = SpreadsheetApp.openById("0AirK-4dEIsvKdDNjR3dtSm5BR0ZSel9XTWRQVXZmZ2c");
+  var doc = SpreadsheetApp.openById(SPREADSHEET_ID);
   var formSheet = doc.getSheetByName("Form Responses");
   var badgesSheet = doc.getSheetByName("Badges");
   
@@ -94,7 +96,6 @@ function doGet(e){
 
 function doGetAssert(badgesSheet, formSheet, encoded_claim_code) {
   var claim_data = getClaimData(encoded_claim_code);
-  Logger.log(claim_data.row);
   ASSERTION_TEMPLATE["verify"]["url"] = getScriptUrl() + "?type=assert&claim_code=" + encoded_claim_code;
   
   ASSERTION_TEMPLATE["recipient"]["identity"] = formSheet.getRange(claim_data.row, FormCols.EMAIL).getValue();
@@ -142,9 +143,6 @@ function getScriptUrl() {
 
 function getBadgeIdFromTitle(badgesSheet, title) {
   for (var i=1; i<=badgesSheet.getLastRow(); i++) {
-    Logger.log(badgesSheet.getRange(i, 1).getValue());
-    Logger.log(title);
-    Logger.log("\n");
     if (badgesSheet.getRange(i, 1).getValue() == title) {
       return i;
     }
@@ -153,8 +151,8 @@ function getBadgeIdFromTitle(badgesSheet, title) {
 }
 
 function updateBadgeChoices() {
-  var form = FormApp.openById("15O4ts5nBVUtfluPeSK1JgbjvauAiWmETrBbLreiIEhI");
-  var doc = SpreadsheetApp.openById("0AirK-4dEIsvKdDNjR3dtSm5BR0ZSel9XTWRQVXZmZ2c");
+  var form = FormApp.openById(FORM_ID);
+  var doc = SpreadsheetApp.openById(SPREADSHEET_ID);
   var badgesSheet = doc.getSheetByName("Badges");
   var values = [];
   for (var i=1; i<=badgesSheet.getLastRow(); i++) {
